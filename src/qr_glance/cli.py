@@ -7,6 +7,8 @@ from qr_glance import __version__
 from qr_glance.encode import ERROR_LEVELS, make_qr
 from qr_glance.render import to_terminal
 
+IMAGE_TYPES = (".png", ".svg")
+
 
 def _read_data(text: str | None) -> str:
     if text is not None and text != "-":
@@ -29,10 +31,32 @@ def _add_render_options(parser: argparse.ArgumentParser) -> None:
         "--border", type=int, default=4, metavar="N",
         help="quiet zone width in modules (default: 4)",
     )
+    parser.add_argument(
+        "-o", "--output", metavar="FILE",
+        help="save as an image instead of printing (.png or .svg)",
+    )
+    parser.add_argument(
+        "--scale", type=int, default=10, metavar="PX",
+        help="pixels per module in saved images (default: 10)",
+    )
 
 
 def _emit(qr, args) -> int:
-    print(to_terminal(qr.matrix, border=args.border, invert=args.invert))
+    if args.output is None:
+        print(to_terminal(qr.matrix, border=args.border, invert=args.invert))
+        return 0
+
+    if not args.output.lower().endswith(IMAGE_TYPES):
+        print(f"qrg: output must end in {' or '.join(IMAGE_TYPES)}", file=sys.stderr)
+        return 2
+    if args.scale < 1:
+        print("qrg: --scale must be at least 1", file=sys.stderr)
+        return 2
+    if args.border < 0:
+        raise ValueError("quiet zone can't be negative")
+    # Files are always dark-on-light; --invert only matters for the terminal.
+    qr.save(args.output, scale=args.scale, border=args.border)
+    print(f"saved {args.output} ({qr.designator}, {qr.symbol_size(scale=args.scale, border=args.border)[0]} px)")
     return 0
 
 
@@ -67,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
         # segno raises a ValueError subclass when data doesn't fit, and we do for bad input
         print(f"qrg: {exc}", file=sys.stderr)
         return 2
+    except OSError as exc:
+        print(f"qrg: {exc.filename or ''}: {exc.strerror or exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
