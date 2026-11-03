@@ -1,12 +1,14 @@
 """Command-line entry point for ``qrg``."""
 
 import argparse
+import getpass
 import json
 import sys
 
 from qr_glance import __version__
 from qr_glance.decode import UnreadableImage, read_image
 from qr_glance.encode import ERROR_LEVELS, make_qr
+from qr_glance.payloads import SECURITY_TYPES, wifi_payload
 from qr_glance.render import to_terminal
 
 IMAGE_TYPES = (".png", ".svg")
@@ -70,6 +72,15 @@ def cmd_make(args) -> int:
     return _emit(make_qr(data, error=args.error), args)
 
 
+def cmd_wifi(args) -> int:
+    password = args.password
+    if password is None and args.security != "nopass":
+        # Prompting keeps the password out of shell history.
+        password = getpass.getpass(f"Password for {args.ssid}: ")
+    payload = wifi_payload(args.ssid, password, security=args.security, hidden=args.hidden)
+    return _emit(make_qr(payload, error=args.error), args)
+
+
 def cmd_read(args) -> int:
     status = 0
     records = []
@@ -106,6 +117,17 @@ def build_parser() -> argparse.ArgumentParser:
     make.add_argument("text", nargs="?", help="text to encode (default: read stdin)")
     _add_render_options(make)
     make.set_defaults(func=cmd_make)
+
+    wifi = sub.add_parser("wifi", help="QR code that joins a Wi-Fi network when scanned")
+    wifi.add_argument("--ssid", required=True, help="network name")
+    wifi.add_argument("--password", help="network password (default: prompt for it)")
+    wifi.add_argument(
+        "--security", default="WPA", choices=SECURITY_TYPES,
+        help="WPA covers WPA2/WPA3; nopass is an open network (default: WPA)",
+    )
+    wifi.add_argument("--hidden", action="store_true", help="the network doesn't broadcast its name")
+    _add_render_options(wifi)
+    wifi.set_defaults(func=cmd_wifi)
 
     read = sub.add_parser("read", help="decode QR codes from image files")
     read.add_argument("images", nargs="+", metavar="IMAGE", help="PNG, JPEG, ... files to scan")
