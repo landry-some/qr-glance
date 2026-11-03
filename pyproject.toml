@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 authors = [{ name = "landry-some" }]
 dependencies = [
     "segno>=1.6",
-    "zxing-cpp>=2.2",
+    "zxing-cpp>=3.1",
     "pillow>=10",
 ]
 

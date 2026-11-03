@@ -1,9 +1,11 @@
 """Command-line entry point for ``qrg``."""
 
 import argparse
+import json
 import sys
 
 from qr_glance import __version__
+from qr_glance.decode import UnreadableImage, read_image
 from qr_glance.encode import ERROR_LEVELS, make_qr
 from qr_glance.render import to_terminal
 
@@ -68,6 +70,31 @@ def cmd_make(args) -> int:
     return _emit(make_qr(data, error=args.error), args)
 
 
+def cmd_read(args) -> int:
+    status = 0
+    records = []
+    prefix = len(args.images) > 1
+    for path in args.images:
+        try:
+            found = read_image(path)
+        except UnreadableImage as exc:
+            print(f"qrg: {exc}", file=sys.stderr)
+            status = 2
+            continue
+        if not found:
+            print(f"qrg: {path}: no QR code found", file=sys.stderr)
+            status = max(status, 1)
+        for code in found:
+            if args.json:
+                records.append({"file": path, "text": code.text, "format": code.format,
+                                "corners": [list(p) for p in code.corners]})
+            else:
+                print(f"{path}: {code.text}" if prefix else code.text)
+    if args.json:
+        print(json.dumps(records, indent=2, ensure_ascii=False))
+    return status
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="qrg", description="Make QR codes in the terminal and read them from images.",
@@ -79,6 +106,11 @@ def build_parser() -> argparse.ArgumentParser:
     make.add_argument("text", nargs="?", help="text to encode (default: read stdin)")
     _add_render_options(make)
     make.set_defaults(func=cmd_make)
+
+    read = sub.add_parser("read", help="decode QR codes from image files")
+    read.add_argument("images", nargs="+", metavar="IMAGE", help="PNG, JPEG, ... files to scan")
+    read.add_argument("--json", action="store_true", help="print results as JSON with corner points")
+    read.set_defaults(func=cmd_read)
 
     return parser
 
