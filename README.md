@@ -93,6 +93,10 @@ Every QR code found is printed on its own line, in reading order (top row
 first, each row left to right). Any format Pillow can open works (PNG, JPEG,
 GIF, BMP, WebP, ...), and light-on-dark codes are found too.
 
+A code that holds binary data instead of text is printed as base64 (or hex
+with `--binary hex`), with a note on stderr. In `--json` output its `text` is
+`null` and the data is under a `base64` or `hex` key.
+
 Exit codes for `read`: `0` every file had a code, `1` at least one file had
 none, `2` a file was missing or not an image.
 

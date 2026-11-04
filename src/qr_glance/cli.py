@@ -1,6 +1,7 @@
 """Command-line entry point for ``qrg``."""
 
 import argparse
+import base64
 import getpass
 import json
 import sys
@@ -81,6 +82,10 @@ def cmd_wifi(args) -> int:
     return _emit(make_qr(payload, error=args.error), args)
 
 
+def _encode_binary(data: bytes, form: str) -> str:
+    return data.hex() if form == "hex" else base64.b64encode(data).decode("ascii")
+
+
 def cmd_read(args) -> int:
     status = 0
     records = []
@@ -96,11 +101,18 @@ def cmd_read(args) -> int:
             print(f"qrg: {path}: no QR code found", file=sys.stderr)
             status = max(status, 1)
         for code in found:
+            text = code.text
+            if code.binary:
+                text = _encode_binary(code.data, args.binary)
+                print(f"qrg: {path}: binary data, shown as {args.binary}", file=sys.stderr)
             if args.json:
-                records.append({"file": path, "text": code.text, "format": code.format,
-                                "corners": [list(p) for p in code.corners]})
+                record = {"file": path, "text": None if code.binary else text,
+                          "format": code.format, "corners": [list(p) for p in code.corners]}
+                if code.binary:
+                    record[args.binary] = text
+                records.append(record)
             else:
-                print(f"{path}: {code.text}" if prefix else code.text)
+                print(f"{path}: {text}" if prefix else text)
     if args.json:
         print(json.dumps(records, indent=2, ensure_ascii=False))
     return status
@@ -132,6 +144,10 @@ def build_parser() -> argparse.ArgumentParser:
     read = sub.add_parser("read", help="decode QR codes from image files")
     read.add_argument("images", nargs="+", metavar="IMAGE", help="PNG, JPEG, ... files to scan (- reads stdin)")
     read.add_argument("--json", action="store_true", help="print results as JSON with corner points")
+    read.add_argument(
+        "--binary", default="base64", choices=("base64", "hex"),
+        help="how to show codes that hold binary data, not text (default: base64)",
+    )
     read.set_defaults(func=cmd_read)
 
     return parser

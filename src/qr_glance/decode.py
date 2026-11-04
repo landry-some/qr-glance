@@ -25,6 +25,9 @@ class Found:
     format: str
     # Corner points, clockwise from the top-left of the symbol
     corners: list[tuple[int, int]]
+    # Raw payload; ``binary`` is True when it isn't text, so ``text`` is garbled
+    data: bytes = b""
+    binary: bool = False
 
 
 def _corners(position) -> list[tuple[int, int]]:
@@ -53,7 +56,8 @@ def read_image(path: str | Path) -> list[Found]:
         raise UnreadableImage(f"{path}: not a readable image") from exc
 
     found = [
-        Found(text=r.text, format=r.format.name, corners=_corners(r.position))
+        Found(text=r.text, format=r.format.name, corners=_corners(r.position),
+              data=r.bytes, binary=r.content_type == zxingcpp.ContentType.Binary)
         for r in zxingcpp.read_barcodes(gray, formats=_QR_FORMATS)
     ]
     # zxing's own order depends on where its scan happens to hit first.

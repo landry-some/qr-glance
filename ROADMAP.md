@@ -20,7 +20,7 @@ Planned work after v0.1. Estimates are rough, in hours.
 - [ ] Warn when the code is wider than the terminal instead of wrapping it (1 h)
 - [x] Stable ordering when one image holds several codes (top-left first) (1 h)
 - [ ] Preprocessing for low-contrast, blurry or rotated photos before decoding (2 h)
-- [ ] Binary (non-UTF-8) payloads: print them as hex or base64 instead of failing (1 h)
+- [x] Binary (non-UTF-8) payloads: print them as hex or base64 instead of failing (1 h)
 - [ ] Handle `NO_COLOR` and dumb terminals when rendering (1 h)
 
 ## Refactors

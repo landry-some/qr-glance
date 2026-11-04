@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 
@@ -90,6 +91,35 @@ def test_json_output(code_png, capsys):
     assert record["text"] == "json please"
     assert record["format"] == "QRCode"
     assert len(record["corners"]) == 4
+
+
+BINARY = b"\xff\xfe\x00 binary \x80\x01"
+
+
+def test_binary_payload_is_printed_as_base64(code_png, capsys):
+    assert main(["read", code_png(BINARY)]) == 0
+    captured = capsys.readouterr()
+    assert base64.b64decode(captured.out.strip()) == BINARY
+    assert "binary data, shown as base64" in captured.err
+
+
+def test_binary_payload_as_hex(code_png, capsys):
+    assert main(["read", "--binary", "hex", code_png(BINARY)]) == 0
+    assert capsys.readouterr().out == BINARY.hex() + "\n"
+
+
+def test_binary_payload_in_json(code_png, capsys):
+    assert main(["read", "--json", "--binary", "hex", code_png(BINARY)]) == 0
+    [record] = json.loads(capsys.readouterr().out)
+    assert record["text"] is None
+    assert record["hex"] == BINARY.hex()
+
+
+def test_latin1_text_is_not_treated_as_binary(code_png, capsys):
+    assert main(["read", code_png("héllo".encode("latin-1"))]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == "héllo\n"
+    assert captured.err == ""
 
 
 def test_image_without_code_exits_1(tmp_path, code_png, capsys):
