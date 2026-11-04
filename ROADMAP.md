@@ -16,7 +16,7 @@ Planned work after v0.1. Estimates are rough, in hours.
 
 ## Bugs and edge cases
 
-- [ ] Clear error message when the data is too long for any QR version (1 h)
+- [x] Clear error message when the data is too long for any QR version (1 h)
 - [ ] Warn when the code is wider than the terminal instead of wrapping it (1 h)
 - [ ] Stable ordering when one image holds several codes (top-left first) (1 h)
 - [ ] Preprocessing for low-contrast, blurry or rotated photos before decoding (2 h)

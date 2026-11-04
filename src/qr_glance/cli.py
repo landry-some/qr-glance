@@ -142,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return args.func(args)
     except ValueError as exc:
-        # segno raises a ValueError subclass when data doesn't fit, and we do for bad input
+        # make_qr raises ValueError when data doesn't fit, and we do for bad input
         print(f"qrg: {exc}", file=sys.stderr)
         return 2
     except OSError as exc:

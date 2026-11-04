@@ -33,7 +33,7 @@ def test_make_empty_input(capsys, monkeypatch):
 
 def test_make_too_much_data(capsys):
     assert main(["make", "x" * 5000]) == 2
-    assert capsys.readouterr().err.startswith("qrg: ")
+    assert capsys.readouterr().err.startswith("qrg: data is too long for a QR code: 5000 bytes")
 
 
 def test_make_negative_border(capsys):
