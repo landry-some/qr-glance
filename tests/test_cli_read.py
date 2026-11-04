@@ -1,3 +1,4 @@
+import io
 import json
 
 import pytest
@@ -88,3 +89,21 @@ def test_json_with_nothing_found_is_an_empty_list(tmp_path, capsys):
     Image.new("L", (50, 50), 255).save(blank)
     assert main(["read", "--json", str(blank)]) == 1
     assert json.loads(capsys.readouterr().out) == []
+
+
+class _Stdin:
+    def __init__(self, data):
+        self.buffer = io.BytesIO(data)
+
+
+def test_reads_image_bytes_from_stdin(code_png, monkeypatch, capsys):
+    with open(code_png("piped in"), "rb") as f:
+        monkeypatch.setattr("sys.stdin", _Stdin(f.read()))
+    assert main(["read", "-"]) == 0
+    assert capsys.readouterr().out == "piped in\n"
+
+
+def test_stdin_that_is_not_an_image_exits_2(monkeypatch, capsys):
+    monkeypatch.setattr("sys.stdin", _Stdin(b"plain text"))
+    assert main(["read", "-"]) == 2
+    assert "stdin: not a readable image" in capsys.readouterr().err

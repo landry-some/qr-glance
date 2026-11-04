@@ -1,5 +1,7 @@
 """Find and decode QR codes in image files."""
 
+import io
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,9 +33,15 @@ def _corners(position) -> list[tuple[int, int]]:
 
 
 def read_image(path: str | Path) -> list[Found]:
-    """Return every QR code zxing can find in the image at ``path``."""
+    """Return every QR code zxing can find in the image at ``path``.
+
+    A ``path`` of ``-`` reads the image bytes from stdin.
+    """
+    source = path
+    if str(path) == "-":
+        source, path = io.BytesIO(sys.stdin.buffer.read()), "stdin"
     try:
-        with Image.open(path) as img:
+        with Image.open(source) as img:
             # Grayscale sidesteps palette and alpha modes zxing can't take directly.
             gray = img.convert("L")
     except FileNotFoundError as exc:

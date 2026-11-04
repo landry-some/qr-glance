@@ -130,7 +130,7 @@ def build_parser() -> argparse.ArgumentParser:
     wifi.set_defaults(func=cmd_wifi)
 
     read = sub.add_parser("read", help="decode QR codes from image files")
-    read.add_argument("images", nargs="+", metavar="IMAGE", help="PNG, JPEG, ... files to scan")
+    read.add_argument("images", nargs="+", metavar="IMAGE", help="PNG, JPEG, ... files to scan (- reads stdin)")
     read.add_argument("--json", action="store_true", help="print results as JSON with corner points")
     read.set_defaults(func=cmd_read)
 

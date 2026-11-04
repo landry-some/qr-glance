@@ -86,6 +86,7 @@ history.
 qrg read examples/sample-url.png
 qrg read screenshot.png photo.jpg       # prefixes each result with the file name
 qrg read --json screenshot.png          # text, format and corner points
+maim -s | qrg read -                    # image bytes from stdin
 ```
 
 Every QR code found is printed on its own line. Any format Pillow can open

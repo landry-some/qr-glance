@@ -6,7 +6,7 @@ Planned work after v0.1. Estimates are rough, in hours.
 
 - [ ] Payload helpers for URL, email, geo location and vCard contacts (3 h)
 - [ ] `qrg read --clipboard` to decode an image copied to the clipboard (3 h)
-- [ ] Read image bytes from stdin (`maim -s | qrg read -`) (1 h)
+- [x] Read image bytes from stdin (`maim -s | qrg read -`) (1 h)
 - [ ] Real pixel output in terminals with the kitty graphics protocol or sixel (4 h)
 - [ ] ASCII-only render mode for terminals without Unicode block characters (1 h)
 - [ ] Compact quarter-block render mode that fits bigger codes in small windows (2 h)
