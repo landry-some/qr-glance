@@ -20,8 +20,8 @@ def test_bad_error_level():
 
 
 def test_too_long_data_names_the_limit():
-    with pytest.raises(ValueError, match=r"too long .* 3000 bytes.* level M is 2331 bytes of text \(try -e L\)"):
-        make_qr("x" * 3000)
+    with pytest.raises(ValueError, match=r"too long .* 2500 bytes.* level M is 2331 bytes of text \(try -e L\)"):
+        make_qr("x" * 2500)
 
 
 def test_too_long_at_level_l_has_no_hint():
