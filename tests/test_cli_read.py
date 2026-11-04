@@ -36,16 +36,44 @@ def test_reads_jpeg_with_inverted_colours(tmp_path, capsys):
     assert capsys.readouterr().out == "dark mode\n"
 
 
+def _grid(tmp_path, code_png, rows, rise=0):
+    """Paste one code per text into a grid image, row by row, and return its path.
+
+    Each code sits ``rise`` pixels higher than the one to its left, like a tilted photo.
+    """
+    tiles = [[Image.open(code_png(t, f"{t}.png")) for t in row] for row in rows]
+    size = max(t.width for row in tiles for t in row)
+    width = max(map(len, tiles))
+    grid = Image.new("L", (size * width, size * len(tiles) + rise * width), 255)
+    for y, row in enumerate(tiles):
+        for x, tile in enumerate(row):
+            grid.paste(tile, (x * size, y * size + rise * (width - 1 - x)))
+    path = tmp_path / "grid.png"
+    grid.save(path)
+    return str(path)
+
+
 def test_reads_two_codes_in_one_image(tmp_path, code_png, capsys):
-    a = Image.open(code_png("left", "l.png"))
-    b = Image.open(code_png("right", "r.png"))
-    both = Image.new("L", (a.width + b.width, max(a.height, b.height)), 255)
-    both.paste(a, (0, 0))
-    both.paste(b, (a.width, 0))
-    path = tmp_path / "both.png"
-    both.save(path)
-    assert main(["read", str(path)]) == 0
-    assert sorted(capsys.readouterr().out.split()) == ["left", "right"]
+    assert main(["read", _grid(tmp_path, code_png, [["left", "right"]])]) == 0
+    assert capsys.readouterr().out == "left\nright\n"
+
+
+def test_codes_come_top_left_first(tmp_path, code_png, capsys):
+    path = _grid(tmp_path, code_png, [["a1", "a2", "a3"], ["b1", "b2", "b3"]])
+    assert main(["read", path]) == 0
+    assert capsys.readouterr().out.split() == ["a1", "a2", "a3", "b1", "b2", "b3"]
+
+
+def test_tilted_row_still_reads_left_to_right(tmp_path, code_png, capsys):
+    path = _grid(tmp_path, code_png, [["a1", "a2", "a3"], ["b1", "b2", "b3"]], rise=20)
+    assert main(["read", path]) == 0
+    assert capsys.readouterr().out.split() == ["a1", "a2", "a3", "b1", "b2", "b3"]
+
+
+def test_stacked_codes_come_top_first(tmp_path, code_png, capsys):
+    path = _grid(tmp_path, code_png, [["top"], ["middle"], ["bottom"]])
+    assert main(["read", "--json", path]) == 0
+    assert [r["text"] for r in json.loads(capsys.readouterr().out)] == ["top", "middle", "bottom"]
 
 
 def test_multiple_files_get_a_prefix(code_png, capsys):

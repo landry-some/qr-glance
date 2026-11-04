@@ -89,8 +89,9 @@ qrg read --json screenshot.png          # text, format and corner points
 maim -s | qrg read -                    # image bytes from stdin
 ```
 
-Every QR code found is printed on its own line. Any format Pillow can open
-works (PNG, JPEG, GIF, BMP, WebP, ...), and light-on-dark codes are found too.
+Every QR code found is printed on its own line, in reading order (top row
+first, each row left to right). Any format Pillow can open works (PNG, JPEG,
+GIF, BMP, WebP, ...), and light-on-dark codes are found too.
 
 Exit codes for `read`: `0` every file had a code, `1` at least one file had
 none, `2` a file was missing or not an image.
